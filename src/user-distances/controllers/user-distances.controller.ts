@@ -22,6 +22,14 @@ export class UserDistancesController {
     })
   }
 
+  @Get('/calculate-distances')
+  async calculateUserDistances(@Res() response) {
+    const userDistances = await this.userDistancesService.calculateDistancesPerUser();
+    return response.status(HttpStatus.OK).json({
+      userDistances
+    })
+  }
+
   @Get('/:id')
   async findById(@Res() response, @Param('id') id) {
     const userDistance = await this.userDistancesService.findOne(id);

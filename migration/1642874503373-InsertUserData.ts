@@ -4,6 +4,8 @@ export class InsertUserData1642874503373 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         queryRunner.query("INSERT INTO Checkpoint (latitude, longitude) VALUES ('42.621881', '21.083090');");
+        queryRunner.query("INSERT INTO Checkpoint (latitude, longitude) VALUES ('42.661307', '21.168308');");
+        queryRunner.query("INSERT INTO Checkpoint (latitude, longitude) VALUES ('42.660179', '21.156378');");
         queryRunner.query("INSERT INTO Users (username, homeLatitude, homeLongitude, currentLatitude, currentLongitude) VALUES ('Gent', '42.651571', '21.177936', '42.650407', '21.174744');");
         queryRunner.query("INSERT INTO Users (username, homeLatitude, homeLongitude, currentLatitude, currentLongitude) VALUES ('Tony', '42.675314', '21.137248', '42.672861', '21.144887');");
         queryRunner.query("INSERT INTO Users (username, homeLatitude, homeLongitude, currentLatitude, currentLongitude) VALUES ('Mike', '42.665979', '21.177830', '42.664685', '21.179536');");
@@ -14,6 +16,8 @@ export class InsertUserData1642874503373 implements MigrationInterface {
         queryRunner.query("INSERT INTO Users (username, homeLatitude, homeLongitude, currentLatitude, currentLongitude) VALUES ('Johnson', '42.648226', '21.171810', '42.648226', '21.171810');");
         queryRunner.query("INSERT INTO Users (username, homeLatitude, homeLongitude, currentLatitude, currentLongitude) VALUES ('Steve', '42.646285', '21.167358', '42.644521', '21.167364');");
         queryRunner.query("INSERT INTO Users (username, homeLatitude, homeLongitude, currentLatitude, currentLongitude) VALUES ('Bill', '42.656530', '21.168232', '42.656317', '21.169713');");
+
+
     }
     public async down(queryRunner: QueryRunner): Promise<void> {
         queryRunner.query('DELETE FROM Checkpoint;');

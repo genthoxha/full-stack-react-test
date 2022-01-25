@@ -1,20 +1,14 @@
 import { PrimaryGeneratedColumn } from 'typeorm';
-import { Column, Entity, CreateDateColumn, OneToMany, UpdateDateColumn } from 'typeorm';
-import { UserDistances } from '../../user-distances/entities/user-distances.entity';
+import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class Distance {
-
   @PrimaryGeneratedColumn()
   readonly id: number;
 
-  @Column()
+  @Column({ type: 'numeric', precision: 10, scale: 5})
   value: number;
 
-  @OneToMany(
-    () => UserDistances,
-    userDistance => userDistance.distance,
-    { cascade: true },
-  )
-  userDistances: UserDistances[];
 }
+
+

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus } fr
 import { UserCheckpointsService } from '@app/user-checkpoints/services/user-checkpoints.service';
 import { UserCheckpoints } from '@app/user-checkpoints/entities/user-checkpoints.entity';
 
-@Controller('user-checkpoint')
+@Controller('user-checkpoints')
 export class UserCheckpointsController {
   constructor(private readonly userCheckpointService: UserCheckpointsService){}
 
@@ -17,6 +17,14 @@ export class UserCheckpointsController {
   @Get()
   async fetchAll(@Res() response) {
     const userCheckpoints = await this.userCheckpointService.findAll();
+    return response.status(HttpStatus.OK).json({
+      userCheckpoints
+    })
+  }
+
+  @Get('/add-checkpoint-to-users')
+  async addCheckpointToUsers(@Res() response) {
+    const userCheckpoints = await this.userCheckpointService.addCheckpointsToUsers();
     return response.status(HttpStatus.OK).json({
       userCheckpoints
     })

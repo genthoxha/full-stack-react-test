@@ -7,7 +7,7 @@ import { DistancesModule } from './distances/distances.module';
 import { CheckpointsModule } from './checkpoints/checkpoints.module';
 import { UserDistancesModule } from './user-distances/user-distances.module';
 import { ConfigModule, ConfigService } from "nestjs-config";
-import { UserCheckpointsModule } from '@app/user-checkpoints/controllers/user-checkpoints.module';
+import { UserCheckpointsModule } from '@app/user-checkpoints/user-checkpoints.module';
 
 @Module({
   imports: [

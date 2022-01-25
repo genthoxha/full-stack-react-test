@@ -18,9 +18,7 @@ export class DistancesService {
     return this.distanceRepository.findOne(id);
   }
 
-  createDistance(user: Distance): Promise<Distance> {
-    return this.distanceRepository.save(user);
+  createDistance(distance: Partial<Distance>): Promise<Distance> {
+    return this.distanceRepository.save(distance);
   }
-
-
 }
