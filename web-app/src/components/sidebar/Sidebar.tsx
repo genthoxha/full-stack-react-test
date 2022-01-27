@@ -12,11 +12,6 @@ export const Sidebar: React.FC = () => {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/rank" className="sidebar-menu-item">
-            <span className="sidebar-menu-label">User Rank</span>
-          </NavLink>
-        </li>
-        <li>
           <NavLink to="/map" className="sidebar-menu-item">
             <span className="sidebar-menu-label">Map</span>
           </NavLink>

@@ -1,23 +1,18 @@
-import { BrowserRouter, Route, Switch } from "react-router-dom";
-import React from "react";
-import "./MainLayout.css";
-import { Sidebar } from "../sidebar/Sidebar";
-import { UsersComponent } from "../users/UsersComponent";
-import { UserRankComponent } from "../rank/UserRankComponent";
-import {addCheckpoints, calculateUserDistances} from "../../api";
+import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom';
+import React from 'react';
+import './MainLayout.css';
+import { Sidebar } from '../sidebar/Sidebar';
+import { UsersComponent } from '../users/UsersComponent';
+import { addCheckpoints, calculateUserDistances } from '../../api';
+import { MapComponent } from '../map/MapComponent';
 
 export const MainLayout: React.FC = () => {
-
-
   React.useEffect(() => {
-    const fetchData = async () => {
-      const resultOnAddCheckpoints = await addCheckpoints();
-      const resultOnCalculateDistances = await calculateUserDistances();
-      console.log("Checkpoints/user: ", resultOnAddCheckpoints);
-      console.log("User/Distances: ", resultOnCalculateDistances);
-    };
-    fetchData();
-  }, []);
+    (async () => {
+      await addCheckpoints();
+      await calculateUserDistances();
+    })();
+  });
 
   return (
     <BrowserRouter>
@@ -27,12 +22,14 @@ export const MainLayout: React.FC = () => {
         </div>
         <div className="page-content">
           <Switch>
-            <Route exact path={"/users"} component={UsersComponent} />
-            <Route exact path={"/rank"} component={UserRankComponent} />
+            <Route exact path={'/users'} component={UsersComponent} />
+            <Route exact path={'/map'} component={MapComponent} />
+            <Route path="*">
+              <Redirect to="/users" />
+            </Route>
           </Switch>
         </div>
       </div>
     </BrowserRouter>
   );
 };
-
