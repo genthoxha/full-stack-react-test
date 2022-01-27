@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Users } from '../../users/entities/users.entity';
+import { Users } from '@app/users/entities/users.entity';
 import { Repository } from 'typeorm/index';
 import { UserDistances } from '../entities/user-distances.entity';
 import { UsersService } from '@app/users/services/users.service';
@@ -8,11 +8,8 @@ import { DistancesService } from '@app/distances/services/distances.service';
 import { CheckpointsService } from '@app/checkpoints/services/checkpoints.service';
 import { Checkpoint } from '@app/checkpoints/entities/checkpoint.entity';
 import { Distance } from '@app/distances/entities/distances.entity';
-
-enum CalculateDistance {
-  METERS,
-  KM,
-}
+import { Utils } from '@app/utils/utils';
+import { CalculateDistanceByCurrentLocationDto } from '@app/user-distances/dto/CalculateDistanceByCurrentLocationDto';
 
 @Injectable()
 export class UserDistancesService {
@@ -34,80 +31,111 @@ export class UserDistancesService {
     return this.userDistanceRepository.findOne(id);
   }
 
-  async calculateDistancesPerUser() {
+  async calculateDistancesForAllUsers() {
     const users: Users[] = await this.userService.findAll();
     const checkPoints: Checkpoint[] = await this.checkPointService.findAll();
-    return checkPoints.map((checkpoint) => {
-      users.map(async (user) => {
-        const currentUserPosition = {
-          latitude: user.currentLatitude,
-          longitude: user.currentLongitude,
-        };
-        const userHomePosition = {
-          latitude: user.homeLatitude,
-          longitude: user.homeLongitude,
-        };
-        const distanceFromUserToHome = this.distance(
-          currentUserPosition.latitude,
-          currentUserPosition.longitude,
-          userHomePosition.latitude,
-          userHomePosition.longitude
-        );
-        const checkpointPosition = {
-          latitude: checkpoint.latitude,
-          longitude: checkpoint.longitude,
-        };
-        const distanceFromHomeToCheckpoint = this.distance(
-          userHomePosition.latitude,
-          userHomePosition.longitude,
-          checkpointPosition.latitude,
-          checkpointPosition.longitude
-        );
-        const partialDistance: Partial<Distance> = {
-          value: 2 * (distanceFromUserToHome + distanceFromHomeToCheckpoint),
-        };
+    const userDistances: Array<{
+      user: Users;
+      distance: Partial<Distance>;
+      checkpointId: string;
+    }> = [];
+    await Promise.all(
+      await checkPoints.map(async (checkpoint) => {
+        await users.map(async (user) => {
+          const {
+            currentLatitude,
+            currentLongitude,
+            homeLatitude,
+            homeLongitude,
+          } = user;
+          const distanceFromUserToHome = Utils.calculateDistance(
+            currentLatitude,
+            currentLongitude,
+            homeLatitude,
+            homeLongitude,
+          );
+          const { latitude, longitude, id } = checkpoint;
+          const distanceFromHomeToCheckpoint = Utils.calculateDistance(
+            homeLatitude,
+            homeLongitude,
+            latitude,
+            longitude,
+          );
+          const distance = {
+            value:
+              distanceFromUserToHome +
+              distanceFromHomeToCheckpoint +
+              distanceFromHomeToCheckpoint,
+          };
+          userDistances.push({
+            user,
+            distance,
+            checkpointId: id,
+          });
+        });
+      }),
+    );
+    await Promise.all(
+      userDistances.map(async (userDistances) => {
         const distance = await this.distanceService.createDistance(
-          partialDistance,
+          userDistances.distance,
         );
         await this.createUserDistance({
           distance,
-          user,
+          user: userDistances.user,
+          checkpointId: userDistances.checkpointId,
         });
+      }),
+    );
+  }
 
-        await this.getUserRankingByCheckpointId(1);
-      });
-    });
+  async getUDistanceFromLocationToCheckpoint(body: CalculateDistanceByCurrentLocationDto) {
+    const { latitude, longitude, checkpointId } = body;
+    const checkpoint = await this.checkPointService.findOne(checkpointId);
+    return Utils.calculateDistance(latitude, longitude, checkpoint.latitude, checkpoint.longitude); // Also getting back as the other cases
   }
 
   async getUserRankingByCheckpointId(id) {
- /*   let result = this.userDistanceRepository
-      .createQueryBuilder("userDistances")
-      .innerJoinAndSelect("userDistances.user", "user")
-      .innerJoin("userDistances.user.checkpoint", "userCheckpoint")
-      .where("userCheckpoint.id =:id", { id });
-*/
+    const rawResult = await this.userDistanceRepository
+      .createQueryBuilder('ud')
+      .innerJoinAndSelect(
+        Checkpoint,
+        'checkpoints',
+        'checkpoints.id = ud.checkpointId',
+      )
+      .innerJoinAndSelect(Users, 'users', 'users.id = ud.userId')
+      .innerJoinAndSelect(Distance, 'distances', 'ud.distanceId = distances.id')
+      .addSelect('checkpoints.id', "checkpointId")
+      .addSelect('users.homeLatitude', 'homeLatitude')
+      .addSelect('users.homeLongitude', 'homeLongitude')
+      .addSelect('users.username', 'username')
+      .addSelect('users.currentLatitude', 'currentLatitude')
+      .addSelect('users.currentLongitude', 'currentLongitude')
+      .addSelect('checkpoints.latitude', 'checkpointLatitude')
+      .addSelect('checkpoints.longitude', 'checkpointLongitude')
+      .addSelect('distances.value', 'distance')
+      .where('ud.checkpointId = :id', { id })
+      .orderBy('distances.value', 'DESC')
+      .distinct(true)
+      .getRawMany();
 
+    return rawResult.map((rawData) => {
+      delete rawData.ud_checkpointId;
+      delete rawData.ud_distanceId;
+      delete rawData.ud_id;
+      delete rawData.ud_userId;
+      delete rawData.users_username;
+      return rawData;
+    });
   }
-  createUserDistance(
+  async createUserDistance(
     userDistance: Partial<UserDistances>,
   ): Promise<UserDistances> {
-    return this.userDistanceRepository.save(userDistance);
+    const oldUserDistance = await this.userDistanceRepository.find({ checkpointId: userDistance.checkpointId })
+    if (oldUserDistance.length === 0) {
+      return this.userDistanceRepository.save(userDistance);
+    }
   }
 
-  distance(latitude1, longitude1, latitude2, longitude2) {
-    const R = 6371; // km
-    const dLat = this.toRad(latitude2 - latitude1);
-    const dLon = this.toRad(longitude2 - longitude1);
-    const lat1 = this.toRad(latitude1);
-    const lat2 = this.toRad(latitude2);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
 
-  toRad(Value) {
-    return (Value * Math.PI) / 180;
-  }
 }

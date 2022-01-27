@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Res, HttpStatus } from '@nestjs/common';
 import { UserCheckpointsService } from '@app/user-checkpoints/services/user-checkpoints.service';
 import { UserCheckpoints } from '@app/user-checkpoints/entities/user-checkpoints.entity';
 

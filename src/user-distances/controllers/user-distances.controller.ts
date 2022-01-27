@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Post, Res } from '@nestjs/common';
 import { UserDistancesService } from '../services/user-distances.service';
 import { UserDistances } from '../entities/user-distances.entity';
 
@@ -24,9 +24,25 @@ export class UserDistancesController {
 
   @Get('/calculate-distances')
   async calculateUserDistances(@Res() response) {
-    const userDistances = await this.userDistancesService.calculateDistancesPerUser();
+    const userDistances = await this.userDistancesService.calculateDistancesForAllUsers();
     return response.status(HttpStatus.OK).json({
       userDistances
+    })
+  }
+
+  @Post('/calculate-distance')
+  async calculateUserDistancesByCurrentLocation(@Res() response, @Body() body) {
+    const userDistance = await this.userDistancesService.getUDistanceFromLocationToCheckpoint(body);
+    return response.status(HttpStatus.OK).json({
+      userDistance
+    });
+  }
+
+  @Get('/user-ranking/:id')
+  async getUserRankingByCheckpoint(@Res() response, @Param('id') id) {
+    const userRankingDetails = await this.userDistancesService.getUserRankingByCheckpointId(id);
+    return response.status(HttpStatus.OK).json({
+      userRankingDetails
     })
   }
 

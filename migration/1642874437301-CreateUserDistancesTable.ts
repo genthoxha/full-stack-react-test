@@ -21,6 +21,10 @@ export class CreateUserDistancesTable1642874437301 implements MigrationInterface
                 {
                     name: "distanceId",
                     type: "int"
+                },
+                {
+                    name: "checkpointId",
+                    type: "int"
                 }
             ]
         }))

@@ -18,7 +18,11 @@ export class DistancesService {
     return this.distanceRepository.findOne(id);
   }
 
-  createDistance(distance: Partial<Distance>): Promise<Distance> {
+  async createDistance(distance: Partial<Distance>): Promise<Distance> {
     return this.distanceRepository.save(distance);
+
+   /* const result = await this.distanceRepository.find({ value: distance.value });
+    if (!result) {
+    }*/
   }
 }
